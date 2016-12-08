@@ -1,43 +1,66 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/ipc.h>
+// <HEADER>
+
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <unistd.h>
 #include <string.h>
+
+#include <sys/ipc.h>
+#include <sys/types.h>
 #include <sys/sem.h>
+
+/*
+struct sembuf {
+  short sem_num;
+  short sem_op;
+  short sem_flag;
+};
+*/
 
 union semun {
   int val;
-  struct semid_ds *buf;
-  unsigned short *array;
-  struct seminfo *_buf;
+  struct semid_ds * buf;
+  unsigned short * array;
+  struct seminfo * _buf;
 } su;
 
-int main(int argc, char *argv[]){
-  int semid;
-  int key = ftok("makefile" , 22);
-  int sc;
-  if (strncmp(argv[1], "-c", strlen(argv[1])) == 0){
-    semid = semget(key, 1, IPC_CREAT | 0644);
-    printf("semaphore created %d\n", semid);
-    union semun su;
+int getSem() {
+  int sfd = semget( ftok("makefile", 314159),
+		    1,
+		    IPC_CREAT | 0644);
+  return sfd; // Semaphore Descriptor
+}
+
+int main(int argc, char * argv[]) {
+
+  if (argc == 1)
+    return 0;
+
+  if (strncmp(argv[1],"-c",strlen(argv[1])) == 0) { // create or access
+    int sfd = getSem();
     su.val = 1;
-    //setting semaphore value
-    sc = semctl(semid, 0, SETVAL, su);
-          printf("value set: %d\n", sc);
+    semctl (sfd, 0, SETVAL, su);
+    printf("Retrieved Semaphore: %d\n", sfd); // Debugging
   }
-  else if (strncmp(argv[1], "-v", strlen(argv[1])) == 0){
-    semid = semget(key, 1, 0);
-    //getting the value of a semaphore
-    sc = semctl(semid, 0, GETVAL);
-    
-    printf("semaphore value: %d\n",sc);
-  }
-  else if(strncmp(argv[1], "-r", strlen(argv[1])) == 0){
-    semid = semget(key, 1, 0);
-    //removing a semaphore
-    sc = semctl(semid, 0, IPC_RMID);
-    printf("semaphore removed: %d\n", sc);
-  }
-  return 0;
   
+  /* // addition and other stuff tonight
+  if (strncmp(flag,"-u",2) == 0) // up
+    semctl(sfd, 0, IPC_SETVAL, semun);
+  if (strncmp(flag,"-d",2) == 0) // down
+    semun.semnum = -1;
+  */
+
+  if (strncmp(argv[1],"-r",strlen(argv[1])) == 0) { // remove
+    int sfd = getSem();
+    semctl(sfd, 0, IPC_RMID);
+    printf("Removed Semaphore: %d\n", sfd); // Debugging
+  } 
+  
+  if (strncmp(argv[1],"-v",strlen(argv[1])) == 0) { // value
+    int sfd = getSem();
+    int v = semctl(sfd, 0, GETVAL);
+    printf("Semaphore %d Value: %d\n", sfd , v); // Debugging
+  }
+
+  return 0;
 }
