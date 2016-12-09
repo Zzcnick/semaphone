@@ -14,7 +14,7 @@ union semun {
 
 int main(int argc, char *argv[]){
   int semid;
-  int key = ftok("makefile" , 22);
+  int key = ftok("makefile" , 13);
   int sc;
   if (strncmp(argv[1], "-c", strlen(argv[1])) == 0){
     semid = semget(key, 1, IPC_CREAT | 0644);
@@ -23,7 +23,7 @@ int main(int argc, char *argv[]){
     su.val = 1;
     //setting semaphore value
     sc = semctl(semid, 0, SETVAL, su);
-          printf("value set: %d\n", sc);
+    printf("value set: %d\n", sc);
   }
   else if (strncmp(argv[1], "-v", strlen(argv[1])) == 0){
     semid = semget(key, 1, 0);
