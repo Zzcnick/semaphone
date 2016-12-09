@@ -1,4 +1,4 @@
-
+// Semaphore Control File
 
 #include <stdio.h> 
 #include <stdlib.h> 
