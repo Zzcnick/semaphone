@@ -4,7 +4,7 @@
 #include <stdlib.h> 
 #include <unistd.h>
 #include <string.h>
-
+#include <fcntl.h>
 #include <sys/ipc.h>
 #include <sys/types.h>
 #include <sys/sem.h>
@@ -40,6 +40,8 @@ int main(int argc, char * argv[]) {
     int sfd = getSem();
     su.val = 1;
     semctl (sfd, 0, SETVAL, su);
+    int f =  open("story.txt",O_CREAT | O_TRUNC, 0644);
+    close(f);
     printf("Retrieved Semaphore: %d\n", sfd); // Debugging
   }
   
@@ -52,6 +54,11 @@ int main(int argc, char * argv[]) {
 
   if (strncmp(argv[1],"-r",strlen(argv[1])) == 0) { // remove
     int sfd = getSem();
+    int f = open ("story.txt", O_RDONLY);
+    char *s;
+    read(f, s);
+    
+    printf("%s\n", s, );
     semctl(sfd, 0, IPC_RMID);
     printf("Removed Semaphore: %d\n", sfd); // Debugging
   } 
