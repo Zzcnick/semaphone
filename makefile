@@ -13,4 +13,8 @@ run: semaphone.out
 	./semaphone.out
 
 clean:
+	make cleanH -i
+
+cleanH:
+	./scntl.out -r \ 
 	rm -f *~ *.out *.o *.txt
