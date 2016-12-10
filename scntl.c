@@ -6,6 +6,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <sys/ipc.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/sem.h>
 
@@ -16,14 +17,15 @@ struct sembuf {
   short sem_flag;
 };
 */
-
-union semun {
+//used a mac so i didn't need this
+//remember to uncomment it
+/*union semun {
   int val;
   struct semid_ds * buf;
   unsigned short * array;
   struct seminfo * _buf;
 } su;
-
+*/
 int getSem() {
   int sfd = semget( ftok("makefile", 314159),
 		    1,
@@ -38,8 +40,10 @@ int main(int argc, char * argv[]) {
 
   if (strncmp(argv[1],"-c",strlen(argv[1])) == 0) { // create or access
     int sfd = getSem();
+    union semun su; //remove this 'cause ur using a linux
     su.val = 1;
     semctl (sfd, 0, SETVAL, su);
+    umask(0111);
     int f =  open("story.txt",O_CREAT | O_TRUNC, 0644);
     close(f);
     printf("Retrieved Semaphore: %d\n", sfd); // Debugging
@@ -54,11 +58,15 @@ int main(int argc, char * argv[]) {
 
   if (strncmp(argv[1],"-r",strlen(argv[1])) == 0) { // remove
     int sfd = getSem();
-    int f = open ("story.txt", O_RDONLY);
-    char *s;
-    read(f, s);
-    
-    printf("%s\n", s, );
+    //print contents of the story.txt before rm semaphore
+    //should we rm story.txt as well?
+    int f = open ("story.txt", O_RDONLY, 0664);
+    struct stat *fileinfo = (struct stat*) malloc (sizeof(struct stat));
+    stat("story.txt", fileinfo);
+    char s[fileinfo->st_size];
+    read(f, s, fileinfo-> st_size);
+    printf("%s\n", s );
+    close(f);
     semctl(sfd, 0, IPC_RMID);
     printf("Removed Semaphore: %d\n", sfd); // Debugging
   } 
@@ -66,6 +74,14 @@ int main(int argc, char * argv[]) {
   if (strncmp(argv[1],"-v",strlen(argv[1])) == 0) { // value
     int sfd = getSem();
     int v = semctl(sfd, 0, GETVAL);
+    //view contents of the story file
+    int f = open ("story.txt", O_RDONLY, 0664);
+    struct stat *fileinfo = (struct stat*) malloc (sizeof(struct stat));
+    stat("story.txt", fileinfo);
+    char s[fileinfo->st_size];
+    read(f, s, fileinfo-> st_size);
+    printf("%s\n", s );
+    close(f);
     printf("Semaphore %d Value: %d\n", sfd , v); // Debugging
   }
 
